@@ -1,43 +1,31 @@
-from itertools import permutations
+from itertools import permutations, filterfalse
 
 
 def generate_paths(n):
-    def various_pairs(xs):
-        variants = []
-        for i in range(len(xs)):
-            for j in range(i + 1, len(xs)):
-                variants.append((xs[i], xs[j]))
+    def update_entry(entry, pair):
+        entry[0].remove(pair[0])
+        entry[0].remove(pair[1])
+        entry[0].insert(0, pair)
+        entry[1].append(pair)
 
-        return variants
-
-    def various_tuples(n):
-        xss = [list(range(n))]
+    def logging(log):
         while True:
-            xs = xss.pop()
-            if len(xs) == 2:
-                return map(tuple, xss)
-            for subset in various_pairs(xs):
-                temp = xs.copy()
-                temp.remove(subset[0])
-                temp.remove(subset[1])
-                temp.insert(0, subset)
-                xss.insert(0, temp)
+            remainders, done_steps = log.pop()
+            if len(remainders) == 2:
+                log.append((remainders, done_steps))
+                return
+            
+            for pair in permutations(remainders, 2):
+                entry = (remainders.copy(), done_steps.copy())
+                update_entry(entry, pair)
+                log.insert(0, entry)
 
-    def get_path(tup, acc):
-        if type(tup[0]) is int:
-            acc.append(tup)
-        else:
-            get_path(tup[0], acc)
-            if type(tup[1]) is not int:
-                get_path(tup[1], acc)
+    log = [(list(range(n)), [])]
+    logging(log)
+    paths = [entry[1] for entry in log]
+    return filterfalse(lambda x: [x[1], x[0]] in paths,paths)
+    
 
-            acc.append(tup)
-
-        return acc
-
-    tuples = various_tuples(n)
-    paths = {}
-    for tup in tuples:
-        paths[tup] = get_path(tup, [])
-
-    return paths
+log = generate_paths(4)
+for i, step in enumerate(log):
+    print(i, step)
